@@ -7,6 +7,7 @@ from dataset import AudioDataset
 from audiomodel import ASRModel
 from datasets import load_metric
 from dataset import prepare_commonvoice_data
+from tqdm import tqdm
 
 LEARNING_RATE = 1e-4
 EPOCHS = 10
@@ -62,7 +63,7 @@ def main():
         train_predictions = []
         train_targets = []
         total_loss = 0
-        for batch in train_loader:
+        for batch in tqdm(train_loader):
             files, texts, labels = batch
             preds, loss = forward_step(batch, model)
 
@@ -82,7 +83,7 @@ def main():
         test_predictions = []
         test_targets = []
         total_loss = 0
-        for batch in test_loader:
+        for batch in tqmd(test_loader):
             files, texts, labels = batch
             preds, loss = forward_step(batch, model)
 
