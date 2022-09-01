@@ -12,10 +12,13 @@ from tqdm import tqdm
 LEARNING_RATE = 1e-4
 EPOCHS = 10
 BATCH_SIZE = 16
+CSV_FILE = 'data/processed_data.csv'
+AUDIO_FOLDER = 'data/audio-files'
 
 def process_file_batch(file_names, texts, processor):
     data = []
     for file in file_names:
+        print(file)
         audio_waves, sample_rate = sf.read(file)
         print(sample_rate)
         print(len(audio_waves))
@@ -46,7 +49,7 @@ def eval_asr(metric, preds, targets):
 def main():
     model = ASRModel().to('cuda:0')
 
-    train_files, train_transcriptions, test_files, test_transcriptions = prepare_commonvoice_data(CSV_FILE, )
+    train_files, train_transcriptions, test_files, test_transcriptions = prepare_commonvoice_data(CSV_FILE, AUDIO_FOLDER)
     train_dataset = AudioDataset(train_files, [0]*len(train_files), train_transcriptions)
     test_dataset = AudioDataset(test_files, [0]*len(test_files), test_transcriptions)
 

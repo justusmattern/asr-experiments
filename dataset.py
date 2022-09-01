@@ -17,6 +17,7 @@ class AudioDataset(torch.utils.data.Dataset):
         text = self.transcriptions[index]
         label = self.labels[index]
 
+        print(file)
         return file, text, label
 
 
@@ -24,11 +25,11 @@ def prepare_commonvoice_data(csv_file, audio_folder):
     df = pd.read_csv(csv_file)
     df_train, df_test = train_test_split(df, test_size=0.2)
 
-    filenames_train = df_train['filename'].apply(lambda s: s.replace('cv-valid-test/', '')).to_list()
-    texts_train = df_train['text'].apply(lambda s: audio_folder +'/'+s).to_list()
+    filenames_train = df_train['filename'].apply(lambda s: audio_folder +'/' + s).to_list()
+    texts_train = df_train['text'].to_list()
 
-    filenames_test = df_test['filename'].apply(lambda s: s.replace('cv-valid-test/', '')).to_list()
-    texts_test = df_test['text'].apply(lambda s: audio_folder +'/'+s).to_list()
+    filenames_test = df_test['filename'].apply(lambda s: audio_folder +'/' + s).to_list()
+    texts_test = df_test['text'].to_list()
 
     return filenames_train, texts_train, filenames_test, texts_test
 
