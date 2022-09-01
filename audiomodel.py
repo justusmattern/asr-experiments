@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import soundfile as sf
 from transformers import Wav2Vec2FeatureExtractor, Wav2Vec2CTCTokenizer, HubertModel, Wav2Vec2Processor, HubertForCTC
+import torchaudio
 
 
 class AudioClassificationModel(nn.Module):
@@ -32,6 +33,7 @@ class ASRModel(nn.Module):
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained('ntu-spml/distilhubert')
         self.hubert = HubertForCTC.from_pretrained('ntu-spml/distilhubert', vocab_size=len(self.tokenizer))
         self.processor = Wav2Vec2Processor(feature_extractor=self.feature_extractor, tokenizer=self.tokenizer)
+        self.resampler = torchaudio.Resample(48000, 16000)
 
     def forward(self, input_batch, targets):
         out = self.hubert(input_batch, labels=targets)

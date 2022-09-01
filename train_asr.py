@@ -15,7 +15,7 @@ BATCH_SIZE = 16
 CSV_FILE = 'data/processed_data.csv'
 AUDIO_FOLDER = 'data/audio-files'
 
-def process_file_batch(file_names, texts, processor):
+def process_file_batch(file_names, texts, processor, resampler):
     data = []
     for file in file_names:
         print(file)
@@ -25,6 +25,7 @@ def process_file_batch(file_names, texts, processor):
         data.append(audio_waves)
 
     audio = processor(data, padding=True, sampling_rate=sample_rate, return_tensors='pt').input_values
+    audio = resampler(audio)
 
     with processor.as_target_processor():
         transcriptions =  processor(texts, return_tensors='pt', padding=True).input_ids
@@ -34,7 +35,7 @@ def process_file_batch(file_names, texts, processor):
 
 def forward_step(data_batch, model):
     files, texts, labels = data_batch
-    input_data, transcriptions = process_file_batch(files, texts, model.processor)
+    input_data, transcriptions = process_file_batch(files, texts, model.processor, model.resampler)
 
     loss, preds = model(input_data.to('cuda:0'), transcriptions.to('cuda:0'))
     return preds, loss
