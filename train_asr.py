@@ -6,6 +6,7 @@ import numpy as np
 from dataset import AudioDataset
 from audiomodel import ASRModel
 from datasets import load_metric
+from dataset import prepare_commonvoice_data
 
 LEARNING_RATE = 1e-4
 EPOCHS = 10
@@ -27,15 +28,11 @@ def process_file_batch(file_names, texts, processor):
     return audio, transcriptions
 
 
-def get_data():
-    return
-
-
 def forward_step(data_batch, model):
     files, texts, labels = data_batch
     input_data, transcriptions = process_file_batch(files, texts, model.processor)
 
-    loss, preds = model(input_data, transcriptions)
+    loss, preds = model(input_data.to('cuda:0'), transcriptions.to('cuda:0'))
     return preds, loss
 
 
@@ -46,16 +43,11 @@ def eval_asr(metric, preds, targets):
 
     
 def main():
-    model = ASRModel()
+    model = ASRModel().to('cuda:0')
 
-    audio, text = process_file_batch(['/home/justu/summer/asr/data/audio--1504190166.flac', '/home/justu/summer/asr/data/audio--1504190408.flac'], ["This is an audio transcription yup", "here we go developing models"], processor = model.processor)
-    loss, pred_sequence = model(audio, text)
-
-    print(text, pred_sequence)
-
-    train_files, train_labels, test_files, test_labels = get_data()
-    train_dataset = AudioDataset(train_files, train_labels)
-    test_dataset = AudioDataset(test_files, test_labels)
+    train_files, train_transcriptions, test_files, test_transcriptions = prepare_commonvoice_data(CSV_FILE, )
+    train_dataset = AudioDataset(train_files, [0]*len(train_files), train_transcriptions)
+    test_dataset = AudioDataset(test_files, [0]*len(test_files), test_transcriptions)
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = BATCH_SIZE)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = BATCH_SIZE)
@@ -69,6 +61,7 @@ def main():
         model.train()
         train_predictions = []
         train_targets = []
+        total_loss = 0
         for batch in train_loader:
             files, texts, labels = batch
             preds, loss = forward_step(batch, model)
@@ -78,22 +71,27 @@ def main():
 
             train_predictions.extend(preds)
             train_targets.extend(texts)
+            total_loss += loss.data
         
-        eval_asr(train_predictions, train_targets)
+        eval_asr(wer_metric, train_predictions, train_targets)
+        print('loss', total_loss/len(train_dataset))
 
 
         print(f'testing epoch {epoch}')
         model.eval()
         test_predictions = []
         test_targets = []
+        total_loss = 0
         for batch in test_loader:
             files, texts, labels = batch
             preds, loss = forward_step(batch, model)
 
             test_predictions.extend(model.tokenizer.convert_ids_to_tokens(preds).tolist())
             test_targets.extend(texts)
+            total_loss += loss.data
         
-        eval_asr(test_predictions, test_targets)
+        eval_asr(wer_metric, test_predictions, test_targets)
+        print('loss', total_loss/len(test_dataset))
 
 
 
