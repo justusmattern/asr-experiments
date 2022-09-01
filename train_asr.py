@@ -6,8 +6,8 @@ import numpy as np
 from dataset import AudioDataset
 from audiomodel import ASRModel
 from datasets import load_metric
-from dataset import prepare_commonvoice_data
-from tqdm import tqdm
+from dataset import prepa
+import pandas as pd
 
 LEARNING_RATE = 1e-4
 EPOCHS = 10
@@ -42,6 +42,14 @@ def eval_asr(metric, preds, targets):
     word_error_ratio = metric.compute(predictions=preds, references=targets)
 
     print("word error ratio", word_error_ratio, "\n")
+
+
+def write_to_file(predictions, targets, file_name):
+    df = pd.DataFrame()
+    df['target'] = targets
+    df['prediction'] = predictions
+
+    df.to_csv(file_name+'.csv')
 
     
 def main():
