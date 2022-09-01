@@ -28,7 +28,7 @@ class AudioClassificationModel(nn.Module):
 class ASRModel(nn.Module):
     def __init__(self):
         super(ASRModel, self).__init__()
-        self.tokenizer = Wav2Vec2CTCTokenizer("/home/justu/summer/asr/data/vocab.json", unk_token="[UNK]", pad_token="[PAD]", word_delimiter_token="|")
+        self.tokenizer = Wav2Vec2CTCTokenizer("data/vocab.json", unk_token="[UNK]", pad_token="[PAD]", word_delimiter_token="|")
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained('ntu-spml/distilhubert')
         self.hubert = HubertForCTC.from_pretrained('ntu-spml/distilhubert', vocab_size=len(self.tokenizer))
         self.processor = Wav2Vec2Processor(feature_extractor=self.feature_extractor, tokenizer=self.tokenizer)
