@@ -17,7 +17,6 @@ class AudioDataset(torch.utils.data.Dataset):
         text = self.transcriptions[index]
         label = self.labels[index]
 
-        print(file)
         return file, text, label
 
 

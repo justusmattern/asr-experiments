@@ -11,21 +11,18 @@ from tqdm import tqdm
 
 LEARNING_RATE = 1e-4
 EPOCHS = 10
-BATCH_SIZE = 16
+BATCH_SIZE = 4
 CSV_FILE = 'data/processed_data.csv'
 AUDIO_FOLDER = 'data/audio-files'
 
 def process_file_batch(file_names, texts, processor, resampler):
     data = []
     for file in file_names:
-        print(file)
         audio_waves, sample_rate = sf.read(file)
-        print(sample_rate)
-        print(len(audio_waves))
+        audio_waves = resampler(torch.FloatTensor(audio_waves).to('cuda:0')).cpu().numpy()
         data.append(audio_waves)
 
-    audio = processor(data, padding=True, sampling_rate=sample_rate, return_tensors='pt').input_values
-    audio = resampler(audio)
+    audio = processor(data, padding=True, sampling_rate=16000, return_tensors='pt').input_values
 
     with processor.as_target_processor():
         transcriptions =  processor(texts, return_tensors='pt', padding=True).input_ids
@@ -87,15 +84,16 @@ def main():
         test_predictions = []
         test_targets = []
         total_loss = 0
-        for batch in tqmd(test_loader):
+        for batch in tqdm(test_loader):
             files, texts, labels = batch
             preds, loss = forward_step(batch, model)
 
-            test_predictions.extend(model.tokenizer.convert_ids_to_tokens(preds).tolist())
+            test_predictions.extend(preds)
             test_targets.extend(texts)
             total_loss += loss.data
         
         eval_asr(wer_metric, test_predictions, test_targets)
+        write_to_file(test_predictions, test_targets, f'test_epoch{epoch}')
         print('loss', total_loss/len(test_dataset))
 
 
